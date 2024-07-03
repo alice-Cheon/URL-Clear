@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Cleaner</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="{{ url_for('static', filename='scripts.js') }}" defer></script>
+</head>
+<body>
+    <div class="container">
+        <h1>URL Cleaner</h1>
+        <form action="{{ url_for('upload_file') }}" method="post" enctype="multipart/form-data">
+            <textarea name="text" placeholder="Enter text here..."></textarea>
+            <input type="file" name="file"><br>
+            <button type="submit">Clean URLs</button>
+        </form>
+        {% if result %}
+        <textarea id="result" class="result" readonly>{{ result }}</textarea>
+        <button onclick="copyToClipboard()">Copy to Clipboard</button>
+        {% endif %}
+    </div>
+</body>
+</html>
+
