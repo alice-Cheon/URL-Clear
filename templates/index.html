@@ -11,12 +11,13 @@
     <div class="container">
         <h1>URL Cleaner</h1>
         <form action="{{ url_for('upload_file') }}" method="post" enctype="multipart/form-data">
-            <textarea name="text" placeholder="Enter text here..."></textarea>
+            <div contenteditable="true" id="content" name="content" placeholder="Enter text here..." style="border: 1px solid #cccccc; padding: 10px; height: 150px; overflow: auto; white-space: pre-wrap;"></div>
+            <input type="hidden" id="hidden-content" name="content">
             <input type="file" name="file"><br>
-            <button type="submit">Clean URLs</button>
+            <button type="submit" onclick="submitContent()">Clean URLs</button>
         </form>
         {% if result %}
-        <textarea id="result" class="result" readonly>{{ result }}</textarea>
+        <div id="result" class="result">{{ result|safe }}</div>
         <button onclick="copyToClipboard()">Copy to Clipboard</button>
         {% endif %}
     </div>

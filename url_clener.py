@@ -1,7 +1,9 @@
-from flask import Flask, request, render_template, redirect, url_for
+from flask import Flask, request, render_template
+from markupsafe import Markup
 import os
-import webbrowser
 from threading import Timer
+import webbrowser
+from bs4 import BeautifulSoup
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
@@ -23,26 +25,37 @@ def upload_file():
         file.save(filepath)
         result = process_file(filepath)
         os.remove(filepath)  # Clean up the uploaded file after processing
-    elif 'text' in request.form and request.form['text'] != '':
-        text = request.form['text']
-        result = process_text(text)
+    elif 'content' in request.form and request.form['content'] != '':
+        content = request.form['content']
+        result = process_text(content)
     else:
         return 'No file or text provided'
     
-    return render_template('index.html', result=result)
+    return render_template('index.html', result=Markup(result))
 
 def process_file(filepath):
-    processed_lines = []
     with open(filepath, 'r') as f:
-        for line in f:
-            processed_lines.append(process_line(line))
-    return ''.join(processed_lines)
+        content = f.read()
+    return process_text(content)
 
 def process_text(text):
-    processed_lines = []
-    for line in text.split('\n'):
-        processed_lines.append(process_line(line))
-    return '\n'.join(processed_lines)
+    # Check if text contains a table
+    if '<table' in text:
+        soup = BeautifulSoup(text, 'html.parser')
+        for td in soup.find_all('td'):
+            lines = td.decode_contents().split('<br>')
+            processed_lines = [process_line(line) for line in lines]
+            td.clear()
+            for i, line in enumerate(processed_lines):
+                td.append(BeautifulSoup(line, 'html.parser'))
+                if i < len(processed_lines) - 1:
+                    td.append('<br>')
+        return str(soup)
+    else:
+        lines = text.split('\n')
+        processed_lines = [process_line(line) for line in lines]
+        processed_text = '<br>'.join(processed_lines)
+        return processed_text
 
 def process_line(line):
     # Replace non-standard protocols
@@ -55,7 +68,5 @@ def open_browser():
     webbrowser.open_new('http://127.0.0.1:5000')
 
 if __name__ == '__main__':
-    # Start the browser only if this is the main process
-    if not os.environ.get("WERKZEUG_RUN_MAIN"):
-        Timer(1, open_browser).start()
+    Timer(1, open_browser).start()
     app.run(debug=True, use_reloader=False)
