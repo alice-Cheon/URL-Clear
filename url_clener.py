@@ -4,6 +4,7 @@ import os
 from threading import Timer
 import webbrowser
 from bs4 import BeautifulSoup
+import re
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
@@ -60,8 +61,12 @@ def process_text(text):
 def process_line(line):
     # Replace non-standard protocols
     line = line.replace('hxsp', 'http').replace('hxxp', 'http')
+    line = re.sub(r'http\[:\]', 'http:', line)
+    line = re.sub(r'https\[:\]', 'https:', line)
     # Remove defanging by replacing '[.]' with '.'
     line = line.replace('[.]', '.')
+    # Remove port from IP address
+    line = re.sub(r'(\d+\.\d+\.\d+\.\d+):\d+', r'\1', line)
     return line
 
 def open_browser():
